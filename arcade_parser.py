@@ -8,11 +8,10 @@ Parses Arcade JSON data to extract user interactions and generate human-friendly
 import json
 import os
 import requests
-from typing import Dict, List, Any, Tuple
+from typing import Dict, List, Any
 from datetime import datetime
 from dotenv import load_dotenv
 from openai import OpenAI
-from PIL import Image, ImageDraw, ImageFont
 import io
 
 # Load environment variables
@@ -303,45 +302,48 @@ class ArcadeParser:
             
             print("🎨 Generating clean product image...")
             
-            # Generate clean product image using DALL-E
+            # Use gpt-image-1 with integrated text
+            model = "gpt-image-1"
+            prompt = self._create_prompt_with_text(prompt, promotional_text)
+            print("🎨 Generating image with integrated text using gpt-image-1...")
+            
+            # Generate product image
             client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
             
+            # Set quality parameter for gpt-image-1
+            quality = "high"  # gpt-image-1 uses: low, medium, high, auto
+            
             response = client.images.generate(
-                model="dall-e-3",
+                model=model,
                 prompt=prompt,
                 size="1024x1024",
-                quality="standard",
+                quality=quality,
                 n=1,
             )
             
-            # Download the clean image
-            image_url = response.data[0].url
-            image_response = requests.get(image_url)
-            
-            if image_response.status_code == 200:
+            # gpt-image-1 returns base64 encoded image directly
+            if hasattr(response.data[0], 'b64_json') and response.data[0].b64_json:
+                import base64
+                image_data = base64.b64decode(response.data[0].b64_json)
+                
+                # Save the image directly from base64 data
                 with open(output_path, 'wb') as f:
-                    f.write(image_response.content)
-                
-                print("📝 Adding perfect text overlays...")
-                
-                # Add perfect text overlays using PIL
-                final_path = self.add_text_overlays(output_path, promotional_text)
-                
-                print(f"✅ Social media image with perfect text saved as: {final_path}")
-                
-                # Show generated text for transparency
-                print(f"📝 Applied promotional text:")
-                print(f"   Discount: {promotional_text['discount']}")
-                print(f"   Product: {promotional_text['product_name']}")
-                print(f"   Urgency: {promotional_text['urgency']}")
-                print(f"   CTA: {promotional_text['cta']}")
-                print(f"   Tagline: {promotional_text['tagline1']}")
-                print(f"   Extra: {promotional_text['tagline2']}")
-                print(f"   Brand: {promotional_text['website']}")
-                
-                return final_path
+                    f.write(image_data)
+                print(f"✅ gpt-image-1 image saved successfully to {output_path}")
             else:
-                raise Exception(f"Failed to download image: {image_response.status_code}")
+                raise Exception(f"gpt-image-1 returned unexpected response format: {response}")
+            
+            print(f"✅ Social media image with integrated text saved as: {output_path}")
+            print(f"📝 Generated with promotional text:")
+            print(f"   Discount: {promotional_text['discount']}")
+            print(f"   Product: {promotional_text['product_name']}")
+            print(f"   Urgency: {promotional_text['urgency']}")
+            print(f"   CTA: {promotional_text['cta']}")
+            print(f"   Tagline: {promotional_text['tagline1']}")
+            print(f"   Extra: {promotional_text['tagline2']}")
+            print(f"   Brand: {promotional_text['website']}")
+            
+            return output_path
                 
         except Exception as e:
             print(f"❌ Image generation failed: {str(e)}")
@@ -453,343 +455,39 @@ class ArcadeParser:
 
         return prompt
     
-    def add_text_overlays(self, image_path: str, promotional_text: Dict[str, str]) -> str:
-        """Add sophisticated, integrated text overlays with borders, shadows, and bubbly effects"""
-        try:
-            # Open the generated image
-            with Image.open(image_path) as img:
-                # Convert to RGBA for better text handling
-                img = img.convert('RGBA')
-                
-                # Create multiple layers for sophisticated effects
-                shadow_layer = Image.new('RGBA', img.size, (255, 255, 255, 0))
-                border_layer = Image.new('RGBA', img.size, (255, 255, 255, 0))
-                text_layer = Image.new('RGBA', img.size, (255, 255, 255, 0))
-                
-                shadow_draw = ImageDraw.Draw(shadow_layer)
-                border_draw = ImageDraw.Draw(border_layer)
-                text_draw = ImageDraw.Draw(text_layer)
-                
-                # Get image dimensions for better positioning
-                img_width, img_height = img.size
-                
-                # Define enhanced text elements with sophisticated styling and better positioning
-                text_elements = [
-                    # (text, position, font_size, style_type, main_color, border_color, shadow_color)
-                    (promotional_text['discount'], self._center_text_position(promotional_text['discount'], img_width, 120, 'top-left'), 120, 'mega_badge', '#FF0000', '#FFD700', '#800000'),  # Mega discount badge
-                    (promotional_text['product_name'], self._center_text_position(promotional_text['product_name'], img_width, 72, 'center-top'), 72, 'premium_bold', '#000000', '#FFFFFF', '#666666'),  # Premium product name
-                    (promotional_text['urgency'], self._center_text_position(promotional_text['urgency'], img_width, 48, 'top-right'), 48, 'dynamic_bubble', '#FF6600', '#FFCC00', '#CC3300'),  # Dynamic urgency
-                    (promotional_text['cta'], self._center_text_position(promotional_text['cta'], img_width, 84, 'center-bottom'), 84, 'power_button', '#FFFFFF', '#0066CC', '#003366'),  # Power CTA button
-                    (promotional_text['tagline1'], self._center_text_position(promotional_text['tagline1'], img_width, 42, 'right-center'), 42, 'elegant_script', '#0066CC', '#66CCFF', '#003366'),  # Elegant tagline
-                    (promotional_text['tagline2'], self._center_text_position(promotional_text['tagline2'], img_width, 38, 'left-center'), 38, 'modern_accent', '#009900', '#66FF66', '#004400'),  # Modern extra info
-                    (promotional_text['website'], self._center_text_position(promotional_text['website'], img_width, 32, 'bottom-right'), 32, 'signature_brand', '#666666', '#CCCCCC', '#333333'),  # Signature brand
-                ]
-                
-                # Add each text element with sophisticated styling
-                for text, (x, y), font_size, style_type, main_color, border_color, shadow_color in text_elements:
-                    try:
-                        # Get appropriate font
-                        font = self._get_font(font_size, style_type)
-                        
-                        # Apply enhanced style-specific effects
-                        if style_type == 'mega_badge':
-                            self._add_mega_badge_text(shadow_draw, border_draw, text_draw, text, x, y, font, main_color, border_color, shadow_color)
-                        elif style_type == 'premium_bold':
-                            self._add_premium_bold_text(shadow_draw, border_draw, text_draw, text, x, y, font, main_color, border_color, shadow_color)
-                        elif style_type == 'dynamic_bubble':
-                            self._add_dynamic_bubble_text(shadow_draw, border_draw, text_draw, text, x, y, font, main_color, border_color, shadow_color)
-                        elif style_type == 'power_button':
-                            self._add_power_button_text(shadow_draw, border_draw, text_draw, text, x, y, font, main_color, border_color, shadow_color)
-                        elif style_type == 'elegant_script':
-                            self._add_elegant_script_text(shadow_draw, border_draw, text_draw, text, x, y, font, main_color, border_color, shadow_color)
-                        elif style_type == 'modern_accent':
-                            self._add_modern_accent_text(shadow_draw, border_draw, text_draw, text, x, y, font, main_color, border_color, shadow_color)
-                        elif style_type == 'signature_brand':
-                            self._add_signature_brand_text(shadow_draw, border_draw, text_draw, text, x, y, font, main_color, border_color, shadow_color)
-                        # Fallback to original styles for compatibility
-                        elif style_type in ['badge', 'bubble', 'button', 'bold', 'stylish', 'accent', 'brand']:
-                            getattr(self, f'_add_{style_type}_text')(shadow_draw, border_draw, text_draw, text, x, y, font, main_color, border_color, shadow_color)
-                            
-                    except Exception as e:
-                        print(f"Warning: Could not add text '{text}': {e}")
-                
-                # Composite all layers for final result
-                img_with_shadow = Image.alpha_composite(img, shadow_layer)
-                img_with_border = Image.alpha_composite(img_with_shadow, border_layer)
-                final_img = Image.alpha_composite(img_with_border, text_layer)
-                final_img = final_img.convert('RGB')  # Convert back to RGB for saving
-                
-                # Save the final image
-                final_img.save(image_path, 'PNG', quality=95)
-                
-                return image_path
-                
-        except Exception as e:
-            print(f"❌ Text overlay failed: {str(e)}")
-            return image_path  # Return original image if overlay fails
-    
-    def _center_text_position(self, text: str, img_width: int, font_size: int, position_type: str) -> Tuple[int, int]:
-        """Calculate centered text positions based on position type"""
-        # Create a temporary font to measure text
-        temp_font = self._get_font(font_size, 'temp')
+    def _create_prompt_with_text(self, base_prompt: str, promotional_text: Dict[str, str]) -> str:
+        """Enhance the base prompt to include promotional text when using GPT-image-1"""
+        text_elements = []
         
-        # Create temporary draw to measure text
-        temp_img = Image.new('RGBA', (100, 100), (0, 0, 0, 0))
-        temp_draw = ImageDraw.Draw(temp_img)
+        # Add discount text if available
+        if promotional_text.get('discount'):
+            text_elements.append(f"'{promotional_text['discount']}'")
         
-        try:
-            bbox = temp_draw.textbbox((0, 0), text, font=temp_font)
-            text_width = bbox[2] - bbox[0]
-            text_height = bbox[3] - bbox[1]
-        except:
-            # Fallback measurements if textbbox fails
-            text_width = len(text) * (font_size * 0.6)
-            text_height = font_size
+        # Add urgency/badge text
+        if promotional_text.get('urgency'):
+            text_elements.append(f"'{promotional_text['urgency']}'")
         
-        # Calculate positions based on type
-        if position_type == 'top-left':
-            return (60, 60)
-        elif position_type == 'top-right':
-            return (img_width - text_width - 60, 60)
-        elif position_type == 'center-top':
-            return ((img_width - text_width) // 2, 180)
-        elif position_type == 'center-bottom':
-            return ((img_width - text_width) // 2, 780)
-        elif position_type == 'left-center':
-            return (60, 400)
-        elif position_type == 'right-center':
-            return (img_width - text_width - 60, 550)
-        elif position_type == 'bottom-right':
-            return (img_width - text_width - 40, 920)
-        else:
-            return ((img_width - text_width) // 2, 400)  # Default center
-    
-    def _get_font(self, size: int, style_type: str):
-        """Get appropriate font based on style type with enhanced variety"""
-        font_paths = [
-            "/System/Library/Fonts/Helvetica.ttc",
-            "/System/Library/Fonts/Impact.ttc",
-            "/System/Library/Fonts/Arial.ttf",
-            "/System/Library/Fonts/Futura.ttc",
-            "/System/Library/Fonts/Avenir.ttc",
-            "arial.ttf"
-        ]
+        # Add CTA text
+        if promotional_text.get('cta'):
+            text_elements.append(f"'{promotional_text['cta']}'")
         
-        # Adjust size and select font for enhanced styles
-        if style_type in ['mega_badge', 'power_button']:
-            size = int(size * 1.2)  # Larger for maximum impact
-        elif style_type in ['premium_bold', 'dynamic_bubble']:
-            size = int(size * 1.1)  # Slightly larger
-        elif style_type in ['elegant_script', 'modern_accent']:
-            size = int(size * 1.0)  # Standard size for elegance
-        elif style_type == 'signature_brand':
-            size = int(size * 0.9)  # Smaller for subtlety
-            
-        for font_path in font_paths:
-            try:
-                return ImageFont.truetype(font_path, size)
-            except:
-                continue
-        return ImageFont.load_default()
-    
-    def _add_badge_text(self, shadow_draw, border_draw, text_draw, text, x, y, font, main_color, border_color, shadow_color):
-        """Add badge-style text with heavy borders and shadow"""
-        # Shadow (offset)
-        shadow_draw.text((x+3, y+3), text, font=font, fill=shadow_color + '80')  # Semi-transparent shadow
-        # Thick border
-        for dx in range(-4, 5):
-            for dy in range(-4, 5):
-                if dx != 0 or dy != 0:
-                    border_draw.text((x+dx, y+dy), text, font=font, fill=border_color)
-        # Main text
-        text_draw.text((x, y), text, font=font, fill=main_color)
-    
-    def _add_bubble_text(self, shadow_draw, border_draw, text_draw, text, x, y, font, main_color, border_color, shadow_color):
-        """Add bubbly text with rounded border effect"""
-        # Shadow
-        shadow_draw.text((x+2, y+2), text, font=font, fill=shadow_color + '60')
-        # Bubble border (circular effect)
-        for dx in range(-3, 4):
-            for dy in range(-3, 4):
-                if dx*dx + dy*dy <= 9:  # Circular border
-                    border_draw.text((x+dx, y+dy), text, font=font, fill=border_color)
-        # Main text
-        text_draw.text((x, y), text, font=font, fill=main_color)
-    
-    def _add_button_text(self, shadow_draw, border_draw, text_draw, text, x, y, font, main_color, border_color, shadow_color):
-        """Add button-style text with rectangular border"""
-        # Get text dimensions for button background
-        bbox = text_draw.textbbox((0, 0), text, font=font)
-        text_width = bbox[2] - bbox[0]
-        text_height = bbox[3] - bbox[1]
+        # Add product name prominently
+        if promotional_text.get('product_name'):
+            text_elements.append(f"'{promotional_text['product_name']}'")
         
-        # Draw button background
-        button_margin = 10
-        border_draw.rectangle([
-            (x - button_margin, y - button_margin), 
-            (x + text_width + button_margin, y + text_height + button_margin)
-        ], fill=border_color + 'CC')
+        # Add taglines
+        if promotional_text.get('tagline1'):
+            text_elements.append(f"'{promotional_text['tagline1']}'")
         
-        # Shadow
-        shadow_draw.text((x+2, y+2), text, font=font, fill=shadow_color + '80')
-        # Main text
-        text_draw.text((x, y), text, font=font, fill=main_color)
-    
-    def _add_bold_text(self, shadow_draw, border_draw, text_draw, text, x, y, font, main_color, border_color, shadow_color):
-        """Add bold text with strong outline"""
-        # Shadow
-        shadow_draw.text((x+2, y+2), text, font=font, fill=shadow_color + '70')
-        # Strong border
-        for dx in range(-2, 3):
-            for dy in range(-2, 3):
-                if dx != 0 or dy != 0:
-                    border_draw.text((x+dx, y+dy), text, font=font, fill=border_color)
-        # Main text
-        text_draw.text((x, y), text, font=font, fill=main_color)
-    
-    def _add_stylish_text(self, shadow_draw, border_draw, text_draw, text, x, y, font, main_color, border_color, shadow_color):
-        """Add stylish text with gradient-like effect"""
-        # Shadow
-        shadow_draw.text((x+1, y+2), text, font=font, fill=shadow_color + '60')
-        # Light border
-        for dx in range(-1, 2):
-            for dy in range(-1, 2):
-                if dx != 0 or dy != 0:
-                    border_draw.text((x+dx, y+dy), text, font=font, fill=border_color + 'AA')
-        # Main text
-        text_draw.text((x, y), text, font=font, fill=main_color)
-    
-    def _add_accent_text(self, shadow_draw, border_draw, text_draw, text, x, y, font, main_color, border_color, shadow_color):
-        """Add accent text with subtle effects"""
-        # Light shadow
-        shadow_draw.text((x+1, y+1), text, font=font, fill=shadow_color + '50')
-        # Thin border
-        border_draw.text((x-1, y), text, font=font, fill=border_color + 'DD')
-        border_draw.text((x+1, y), text, font=font, fill=border_color + 'DD')
-        border_draw.text((x, y-1), text, font=font, fill=border_color + 'DD')
-        border_draw.text((x, y+1), text, font=font, fill=border_color + 'DD')
-        # Main text
-        text_draw.text((x, y), text, font=font, fill=main_color)
-    
-    def _add_brand_text(self, shadow_draw, border_draw, text_draw, text, x, y, font, main_color, border_color, shadow_color):
-        """Add subtle brand text"""
-        # Very light shadow
-        shadow_draw.text((x+1, y+1), text, font=font, fill=shadow_color + '40')
-        # Minimal border
-        border_draw.text((x-1, y), text, font=font, fill=border_color + 'BB')
-        border_draw.text((x+1, y), text, font=font, fill=border_color + 'BB')
-        # Main text
-        text_draw.text((x, y), text, font=font, fill=main_color)
-    
-    def _add_mega_badge_text(self, shadow_draw, border_draw, text_draw, text, x, y, font, main_color, border_color, shadow_color):
-        """Add mega badge-style text with extra heavy borders and dramatic shadow"""
-        # Double shadow for depth
-        shadow_draw.text((x+5, y+5), text, font=font, fill=shadow_color + '90')
-        shadow_draw.text((x+3, y+3), text, font=font, fill=shadow_color + '60')
-        # Extra thick border
-        for dx in range(-6, 7):
-            for dy in range(-6, 7):
-                if dx != 0 or dy != 0:
-                    border_draw.text((x+dx, y+dy), text, font=font, fill=border_color)
-        # Main text with slight inner glow
-        text_draw.text((x, y), text, font=font, fill=main_color)
-    
-    def _add_premium_bold_text(self, shadow_draw, border_draw, text_draw, text, x, y, font, main_color, border_color, shadow_color):
-        """Add premium bold text with sophisticated layering"""
-        # Multi-layer shadow for depth
-        shadow_draw.text((x+4, y+4), text, font=font, fill=shadow_color + '80')
-        shadow_draw.text((x+2, y+2), text, font=font, fill=shadow_color + '40')
-        # Premium border with gradient effect
-        for dx in range(-3, 4):
-            for dy in range(-3, 4):
-                if dx != 0 or dy != 0:
-                    distance = (dx*dx + dy*dy) ** 0.5
-                    alpha = max(0, 255 - int(distance * 30))
-                    border_draw.text((x+dx, y+dy), text, font=font, fill=border_color + f'{alpha:02x}')
-        # Main text
-        text_draw.text((x, y), text, font=font, fill=main_color)
-    
-    def _add_dynamic_bubble_text(self, shadow_draw, border_draw, text_draw, text, x, y, font, main_color, border_color, shadow_color):
-        """Add dynamic bubbly text with animated-like effects"""
-        # Animated shadow
-        shadow_draw.text((x+3, y+3), text, font=font, fill=shadow_color + '70')
-        # Dynamic bubble border with varying intensity
-        for dx in range(-4, 5):
-            for dy in range(-4, 5):
-                distance = dx*dx + dy*dy
-                if distance <= 16:  # Larger bubble area
-                    intensity = max(50, 255 - int(distance * 12))
-                    border_draw.text((x+dx, y+dy), text, font=font, fill=border_color + f'{intensity:02x}')
-        # Main text
-        text_draw.text((x, y), text, font=font, fill=main_color)
-    
-    def _add_power_button_text(self, shadow_draw, border_draw, text_draw, text, x, y, font, main_color, border_color, shadow_color):
-        """Add power button-style text with enhanced 3D effect"""
-        # Get text dimensions for enhanced button
-        bbox = text_draw.textbbox((0, 0), text, font=font)
-        text_width = bbox[2] - bbox[0]
-        text_height = bbox[3] - bbox[1]
+        # Add website/brand
+        if promotional_text.get('website'):
+            text_elements.append(f"'{promotional_text['website']}'")
         
-        # Enhanced button with gradient-like effect
-        button_margin = 15
-        button_x1 = x - button_margin
-        button_y1 = y - button_margin
-        button_x2 = x + text_width + button_margin
-        button_y2 = y + text_height + button_margin
+        if text_elements:
+            text_instruction = f" Include the following promotional text elements prominently and stylishly overlaid on the image: {', '.join(text_elements)}. Make the text highly readable with good contrast, professional typography, and attractive placement that doesn't obscure the main product."
+            return base_prompt + text_instruction
         
-        # Multi-layer button background for 3D effect
-        for i in range(3):
-            offset = i * 2
-            alpha = 255 - (i * 60)
-            border_draw.rectangle([
-                (button_x1 - offset, button_y1 - offset), 
-                (button_x2 + offset, button_y2 + offset)
-            ], fill=border_color + f'{alpha:02x}')
-        
-        # Strong shadow
-        shadow_draw.text((x+4, y+4), text, font=font, fill=shadow_color + '90')
-        # Main text
-        text_draw.text((x, y), text, font=font, fill=main_color)
-    
-    def _add_elegant_script_text(self, shadow_draw, border_draw, text_draw, text, x, y, font, main_color, border_color, shadow_color):
-        """Add elegant script-style text with refined effects"""
-        # Subtle shadow
-        shadow_draw.text((x+2, y+3), text, font=font, fill=shadow_color + '50')
-        # Refined border with elegant fade
-        for dx in range(-2, 3):
-            for dy in range(-2, 3):
-                if dx != 0 or dy != 0:
-                    distance = (dx*dx + dy*dy) ** 0.5
-                    alpha = max(0, int(200 - distance * 40))
-                    border_draw.text((x+dx, y+dy), text, font=font, fill=border_color + f'{alpha:02x}')
-        # Main text
-        text_draw.text((x, y), text, font=font, fill=main_color)
-    
-    def _add_modern_accent_text(self, shadow_draw, border_draw, text_draw, text, x, y, font, main_color, border_color, shadow_color):
-        """Add modern accent text with contemporary styling"""
-        # Contemporary shadow
-        shadow_draw.text((x+2, y+2), text, font=font, fill=shadow_color + '60')
-        # Modern border with clean lines
-        for offset in range(1, 3):
-            alpha = 200 - (offset * 50)
-            border_draw.text((x-offset, y), text, font=font, fill=border_color + f'{alpha:02x}')
-            border_draw.text((x+offset, y), text, font=font, fill=border_color + f'{alpha:02x}')
-            border_draw.text((x, y-offset), text, font=font, fill=border_color + f'{alpha:02x}')
-            border_draw.text((x, y+offset), text, font=font, fill=border_color + f'{alpha:02x}')
-        # Main text
-        text_draw.text((x, y), text, font=font, fill=main_color)
-    
-    def _add_signature_brand_text(self, shadow_draw, border_draw, text_draw, text, x, y, font, main_color, border_color, shadow_color):
-        """Add signature brand text with premium subtle styling"""
-        # Minimal elegant shadow
-        shadow_draw.text((x+1, y+2), text, font=font, fill=shadow_color + '30')
-        # Subtle border for readability
-        border_draw.text((x-1, y), text, font=font, fill=border_color + 'CC')
-        border_draw.text((x+1, y), text, font=font, fill=border_color + 'CC')
-        border_draw.text((x, y-1), text, font=font, fill=border_color + 'CC')
-        border_draw.text((x, y+1), text, font=font, fill=border_color + 'CC')
-        # Main text
-        text_draw.text((x, y), text, font=font, fill=main_color)
+        return base_prompt
     
     def _extract_page_contexts(self) -> List[str]:
         """Extract unique page contexts/domains"""

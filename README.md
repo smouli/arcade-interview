@@ -6,7 +6,7 @@ A Python solution for parsing Arcade JSON data to extract user interactions and 
 
 ✅ **Identify User Interactions**: Extracts and lists all user actions in human-readable format  
 ✅ **AI-Powered Summaries**: Uses OpenAI GPT-4 to generate intelligent, context-aware summaries  
-✅ **Social Media Image Generation**: Creates promotional images using DALL-E 3 based on analyzed data  
+✅ **Social Media Image Generation**: Creates promotional images using GPT-image-1 (newer than DALL-E 3) based on analyzed data  
 ✅ **JSON File Processing**: Direct parsing from JSON files  
 ✅ **Detailed Analysis**: Provides event counts, flow names, and contextual information  
 ✅ **Fallback Support**: Gracefully handles API failures with local summary generation  
@@ -17,18 +17,29 @@ A Python solution for parsing Arcade JSON data to extract user interactions and 
 ### Command Line Interface
 
 ```bash
-python analyze_arcade.py <json_file> [--generate-image]
+python analyze_arcade.py <json_file>
 ```
+
+**What it does:**
+- Analyzes the Arcade data and displays human-friendly summaries
+- **Automatically generates** a promotional social media image using AI (gpt-image-1)
+- Saves the image as `social_media_promotion.png` in the current directory
 
 ### Examples
 
 ```bash
-# Basic analysis
-python analyze_arcade.py example_data.json
-
-# Analysis with social media image generation
+# Analyze data and generate promotional image
 python analyze_arcade.py example_data.json --generate-image
+
+# Analyze your own data
+python analyze_arcade.py my_arcade_data.json
 ```
+
+**Output includes:**
+- 📊 Flow analysis and event counts
+- 🎯 Human-readable user interactions list  
+- 📝 AI-generated summary of user intent
+- 🎨 **Promotional social media image** (automatically saved)
 
 ### Programmatic Usage
 
@@ -67,7 +78,7 @@ The parser generates two main outputs:
 - Automatic fallback to rule-based summaries if AI is unavailable
 
 ### 3. Social Media Promotional Images
-- AI-generated promotional images using DALL-E 3
+- AI-generated promotional images using GPT-image-1 (newer than DALL-E 3)
 - Product-focused designs with discount/promotional elements
 - Optimized for social media engagement
 - Automatically incorporates product details and branding
@@ -90,7 +101,21 @@ ARCADE DATA ANALYSIS
  3. Scrolled page (duration: 5851ms)
  4. Clicked on image: 'Razor A5 Lux 2 Wheel Kick Scooter'
  5. Clicked on button: 'Add to cart'
- ...
+ 6. Clicked on image: 'Blue'
+ 7. Clicked on image: 'Pink'
+ 8. Clicked on button: 'Add to cart'
+ 9. Clicked on button: 'Decline coverage'
+10. Clicked on link: '1'
+11. Dragged element (duration: 114ms)
+12. Started chapter: 'Add a Scooter to Your Cart on Target.com'
+13. Interacted on www.target.com - clicked other 'search'
+14. Interacted on www.target.com - clicked image 'Razor A5 Lux 2 Wheel Kick Scooter'
+15. Interacted on www.target.com - clicked image 'Blue'
+16. Interacted on www.target.com - clicked image 'Pink'
+17. Interacted on www.target.com - clicked button 'Add to cart'
+18. Interacted on www.target.com - clicked button 'Decline coverage'
+19. Interacted on www.target.com - clicked link '1'
+20. Started chapter: 'Thank you for your interest!'
 
 📝 AI-GENERATED SUMMARY:
 ----------------------------------------
@@ -112,31 +137,14 @@ Here's an example of the AI-generated promotional image created from the analyze
 
 ![Social Media Promotion](./social_media_promotion.png)
 
-*AI-generated promotional image featuring the Razor A5 Lux 2 Wheel Kick Scooter with enhanced polished text overlays, created using external prompts from `prompts.txt` for maximum customizability.*
+*AI-generated promotional image featuring the Razor A5 Lux 2 Wheel Kick Scooter created using external prompts from `prompts.txt` for maximum customizability.*
 
-### Current Image Features:
-- **🏆 Mega Badge**: "15% OFF" (120px, top-left)
-- **💎 Premium Product**: "Razor Scooter" (72px, center-top)  
-- **⚡ Power Button**: "Shop Now" (84px, center-bottom)
-- **🫧 Dynamic Bubble**: "Limited Time" (48px, top-right)
-- **✨ Elegant Tagline**: "Blue or Pink" (42px, right-center)
-- **🎯 Modern Accent**: "Top Rated" (38px, left-center)
-- **🏢 Signature Brand**: "TARGET" (32px, bottom-right)
-
-## Data Structure Support
-
-The parser handles the standard Arcade data format with:
-- `capturedEvents`: Click, typing, scrolling, and dragging events
-- `steps`: Flow steps with page context and interaction details
-- `name`: Flow title for context
-- Page contexts for website identification
-- Search term extraction from URLs
 
 ## Files
 
 - `arcade_parser.py`: Core parsing logic and ArcadeParser class with OpenAI integration
 - `analyze_arcade.py`: Command-line interface
-- `prompts.txt`: External configuration file containing image generation and text overlay prompts
+- `prompts.txt`: External configuration file containing image generation prompts
 - `example_data.json`: Sample Arcade data for testing
 - `social_media_promotion.png`: Generated promotional image example
 - `requirements.txt`: Python dependencies including OpenAI, python-dotenv, and Pillow
@@ -175,15 +183,13 @@ To modify this prompt, edit the `SUMMARY_PROMPT` section in the `arcade_parser.p
 
 ### Image Generation System Prompt
 
-The system can generate engaging social media images based on the analyzed user flow data. The image generation uses OpenAI's DALL-E model with prompts loaded from the external `prompts.txt` file:
+The system can generate engaging social media images based on the analyzed user flow data. The image generation uses OpenAI's GPT-image-1 model (newer than DALL-E 3) with prompts loaded from the external `prompts.txt` file:
 
 **Image Generation Approach:**
+1. **Integrated Text**: GPT-image-1 generates images with promotional text already integrated
+2. **Superior Quality**: Natural-looking text that's part of the image design
+3. **Enhanced Readability**: GPT-image-1's advanced text rendering capabilities
 
-To ensure 100% reliable and readable text, the system uses a **hybrid two-step approach**:
-
-1. **Clean Product Image**: DALL-E generates a professional product image with NO TEXT
-2. **Perfect Text Overlays**: PIL (Python Imaging Library) adds crisp, readable text overlays
-3. **Guaranteed Readability**: Text is rendered using system fonts, ensuring perfect clarity
 
 **Generated Text Elements:**
 ```
@@ -207,7 +213,6 @@ DESIGN REQUIREMENTS:
 - Show the product in an appealing, lifestyle context
 - Product variant: {product_details}
 - Bright, attention-grabbing background colors
-- Leave space around the product for text overlays
 - Professional photography style like a high-end retail catalog
 
 IMPORTANT RULES:
@@ -227,104 +232,15 @@ BACKGROUND:
 Style: High-quality product photography for {website_name} marketing campaign.
 ```
 
-### Text Overlay System Prompt
-
-**Text Overlay System Prompt** (from `prompts.txt`):
-```
-ENHANCED POLISHED TEXT OVERLAY SYSTEM
-
-Create sophisticated, integrated text overlays with multiple visual effects using PIL (Python Imaging Library) with multi-layer rendering and intelligent positioning.
-
-🏆 MEGA DISCOUNT BADGE (120px): Extra dramatic impact
-   - Red text with golden yellow extra-thick border (6px)
-   - Double-layer shadow for dramatic depth
-   - Positioned: Top-left, perfectly centered
-   - Enhanced impact font with 20% larger sizing
-
-💎 PREMIUM PRODUCT NAME (72px): Sophisticated elegance  
-   - Black text with gradient border effect
-   - Multi-layer shadow with sophisticated layering
-   - Positioned: Center-top for prominence
-   - Premium font with refined appearance
-
-🫧 DYNAMIC URGENCY BUBBLE (48px): Animated-like bubbly effect
-   - Orange text with dynamic circular border
-   - Varying intensity bubble appearance
-   - Positioned: Top-right, auto-centered
-   - Enhanced bubble effect with larger radius
-
-⚡ POWER CALL-TO-ACTION (84px): 3D button with depth
-   - White text on enhanced 3D button background
-   - Multi-layer button with gradient effect
-   - Positioned: Center-bottom for maximum impact
-   - Larger button with extended padding (15px)
-
-✨ ELEGANT TAGLINES (42px): Script-like refinement
-   - Brand colors with elegant fade borders
-   - Refined shadow with sophisticated layering
-   - Positioned: Right-center, auto-balanced
-   - Elegant script styling
-
-🎯 MODERN ACCENTS (38px): Contemporary clean styling
-   - Clean lines with modern border effects
-   - Contemporary shadow with sharp definition
-   - Positioned: Left-center for balance
-   - Modern font with clean aesthetics
-
-🏢 SIGNATURE BRANDING (32px): Premium subtle elegance
-   - Minimal elegant styling with premium effects
-   - Subtle border with refined readability
-   - Positioned: Bottom-right, professional placement
-   - Signature-level subtlety
-
-POSITIONING SYSTEM:
-- Intelligent auto-centering based on text dimensions
-- Seven strategic zones for optimal visual hierarchy
-- Perfect balance with responsive positioning
-- Professional text flow and readability
-
-VISUAL EFFECTS:
-- Multi-layer rendering (shadow, border, text layers)
-- Gradient borders and 3D button effects
-- Dynamic bubble effects with varying intensity
-- Premium shadows with sophisticated layering
-- Enhanced visual impact with dramatic styling
-```
-
-**Example Applied Text for Scooter:**
-```
-✅ Social media image with perfect text saved as: social_media_promotion.png
-📝 Applied promotional text:
-   Discount: 15% OFF
-   Product: Razor Scooter
-   Urgency: Flash Sale
-   CTA: Get Yours
-   Tagline: Blue or Pink
-   Extra: Top Rated
-   Brand: TARGET
-```
-
-**Key Benefits:**
-- 🎯 **Perfect Text Clarity**: No more "15 9/6 OE" or distorted characters
-- 🎨 **Multi-Layer Rendering**: Shadow, border, and text layers for depth
-- 🏆 **Premium Styling**: Mega badges, power buttons, and elegant scripts
-- 📏 **Intelligent Centering**: Auto-calculated positioning for perfect balance
-- 🔤 **Larger Fonts**: 20-84px fonts for maximum impact and readability
-- 🎭 **Interesting Typography**: Varied font styles for visual interest
-- 💎 **Sophisticated Effects**: Gradient borders, 3D buttons, and dynamic bubbles
-- 🎪 **Seamless Integration**: Text feels naturally woven into the design
-- 💪 **Enhanced Visual Impact**: Dramatic shadows and enhanced borders
-- 📐 **Strategic Positioning**: Seven intelligent positioning zones
-- ✨ **Professional Polish**: Premium appearance with signature-level refinement
 
 ### Customizing Prompts
 
 **🔧 How to Modify Prompts:**
 - **Image Generation**: Edit the `[IMAGE_GENERATION_PROMPT]` section in `prompts.txt`
-- **Text Overlay**: Edit the `[TEXT_OVERLAY_PROMPT]` section in `prompts.txt`  
 - **Summary Generation**: Edit the `SUMMARY_PROMPT` variable in `arcade_parser.py`
 
 The system automatically loads prompts from `prompts.txt` on startup. Changes take effect immediately on next run.
+
 
 ### Environment Setup
 
@@ -333,8 +249,9 @@ The system automatically loads prompts from `prompts.txt` on startup. Changes ta
    cp .env.example .env
    ```
 
-2. Add your OpenAI API key to the `.env` file:
+2. Add your OpenAI API key and configure feature flags in the `.env` file:
    ```
+   # Required: OpenAI API key for AI summaries and image generation
    OPENAI_API_KEY=your_openai_api_key_here
    ```
 

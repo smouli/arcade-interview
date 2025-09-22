@@ -3,25 +3,39 @@
 Command-line interface for analyzing Arcade data
 
 Usage:
-    python analyze_arcade.py <json_file> [--generate-image]
-    python analyze_arcade.py example_data.json
-    python analyze_arcade.py example_data.json --generate-image
+    python analyze_arcade.py <json_file>
+    
+Automatically generates:
+- Human-friendly analysis summary
+- Promotional social media image (social_media_promotion.png)
 """
 
-import sys
+import argparse
 import json
 from arcade_parser import parse_arcade_data
 
 
 def main():
-    if len(sys.argv) < 2 or len(sys.argv) > 3:
-        print("Usage: python analyze_arcade.py <json_file> [--generate-image]")
-        print("Example: python analyze_arcade.py example_data.json")
-        print("Example: python analyze_arcade.py example_data.json --generate-image")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(
+        description='Analyze Arcade data and generate human-friendly summaries with AI-generated promotional images',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  python analyze_arcade.py example_data.json
+  python analyze_arcade.py your_data.json
+  
+Output:
+  - Displays analysis in terminal
+  - Saves promotional image to social_media_promotion.png
+        """
+    )
     
-    json_file = sys.argv[1]
-    generate_image = len(sys.argv) == 3 and sys.argv[2] == "--generate-image"
+    parser.add_argument('json_file', help='Path to the Arcade JSON data file')
+    
+    args = parser.parse_args()
+    
+    json_file = args.json_file
+    generate_image = True  # Always generate images
     
     try:
         # Read JSON file
