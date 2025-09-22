@@ -1,0 +1,93 @@
+# ARCADE PROMPTS CONFIGURATION FILE
+# This file contains the system prompts for image generation and text overlay
+
+[IMAGE_GENERATION_PROMPT]
+Create a vibrant, professional product showcase image (1024x1024, square format) for {primary_product}.
+
+DESIGN REQUIREMENTS:
+- Modern, clean, professional marketing style
+- Forward-facing product as the main focal point
+- Product should be clearly visible and prominently displayed
+- Show the product in an appealing, lifestyle context
+- Product variant: {product_details}
+- Bright, attention-grabbing background colors
+- Leave space around the product for text overlays
+- Professional photography style like a high-end retail catalog
+
+IMPORTANT RULES:
+- NO TEXT OR WORDS anywhere in the image
+- Focus entirely on product presentation
+- Clean, uncluttered composition
+- High contrast and vibrant colors
+- Professional lighting and shadows
+- Target audience: people interested in {product_category}
+
+BACKGROUND:
+- Colorful gradient or solid background
+- Should complement the product colors
+- Leave margins around the product for text placement
+- Professional marketing aesthetic
+
+Style: High-quality product photography for {website_name} marketing campaign.
+
+[TEXT_OVERLAY_PROMPT]
+ENHANCED POLISHED TEXT OVERLAY SYSTEM
+
+Create sophisticated, integrated text overlays with multiple visual effects using PIL (Python Imaging Library) with multi-layer rendering and intelligent positioning.
+
+TEXT STYLING SPECIFICATIONS:
+
+🏆 MEGA DISCOUNT BADGE (120px): Extra dramatic impact
+   - Red text with golden yellow extra-thick border (6px)
+   - Double-layer shadow for dramatic depth
+   - Positioned: Top-left, perfectly centered
+   - Enhanced impact font with 20% larger sizing
+
+💎 PREMIUM PRODUCT NAME (72px): Sophisticated elegance  
+   - Black text with gradient border effect
+   - Multi-layer shadow with sophisticated layering
+   - Positioned: Center-top for prominence
+   - Premium font with refined appearance
+
+🫧 DYNAMIC URGENCY BUBBLE (48px): Animated-like bubbly effect
+   - Orange text with dynamic circular border
+   - Varying intensity bubble appearance
+   - Positioned: Top-right, auto-centered
+   - Enhanced bubble effect with larger radius
+
+⚡ POWER CALL-TO-ACTION (84px): 3D button with depth
+   - White text on enhanced 3D button background
+   - Multi-layer button with gradient effect
+   - Positioned: Center-bottom for maximum impact
+   - Larger button with extended padding (15px)
+
+✨ ELEGANT TAGLINES (42px): Script-like refinement
+   - Brand colors with elegant fade borders
+   - Refined shadow with sophisticated layering
+   - Positioned: Right-center, auto-balanced
+   - Elegant script styling
+
+🎯 MODERN ACCENTS (38px): Contemporary clean styling
+   - Clean lines with modern border effects
+   - Contemporary shadow with sharp definition
+   - Positioned: Left-center for balance
+   - Modern font with clean aesthetics
+
+🏢 SIGNATURE BRANDING (32px): Premium subtle elegance
+   - Minimal elegant styling with premium effects
+   - Subtle border with refined readability
+   - Positioned: Bottom-right, professional placement
+   - Signature-level subtlety
+
+POSITIONING SYSTEM:
+- Intelligent auto-centering based on text dimensions
+- Seven strategic zones for optimal visual hierarchy
+- Perfect balance with responsive positioning
+- Professional text flow and readability
+
+VISUAL EFFECTS:
+- Multi-layer rendering (shadow, border, text layers)
+- Gradient borders and 3D button effects
+- Dynamic bubble effects with varying intensity
+- Premium shadows with sophisticated layering
+- Enhanced visual impact with dramatic styling
